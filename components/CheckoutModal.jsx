@@ -84,7 +84,7 @@ function deliveryETA() {
 
 export default function CheckoutModal() {
   const { checkoutOpen, setCheckoutOpen } = useUI();
-  const { cart, cartTotal, clearCart } = useCart();
+  const { cart, cartTotal, clearCart, syncCart } = useCart();
   const { user, token } = useAuth();
 
   const [form, setForm] = useState(EMPTY);
@@ -186,8 +186,15 @@ export default function CheckoutModal() {
     return readJson(res);
   };
 
-  const showSuccess = (data, order) => {
+  const showSuccess = (data, sent) => {
     const id = data.orderNumber || data.orderId || '';
+    // Total aur payment status SERVER ka maano — wahi database mein save hua hai
+    // (server daam khud jodta hai aur Razorpay se check karke hi "Paid" lagata hai)
+    const order = {
+      ...sent,
+      totalAmount: data.totalAmount ?? sent.totalAmount,
+      paymentStatus: data.paymentStatus ?? sent.paymentStatus,
+    };
     // Link sirf bana ke rakh rahe hain — khulega tabhi jab customer khud dabaye
     setSuccess({ id, method: order.paymentMethod, waUrl: order ? orderWhatsAppUrl(order, id) : '' });
     setEta(deliveryETA());
@@ -209,14 +216,25 @@ export default function CheckoutModal() {
   };
 
   const placeRazorpay = async () => {
+    // Items bhejte hain, amount nahi — server khud daam jodta hai. Cart mein
+    // koi galti ho to yahin ruk jaata hai, customer ke paise katne se PEHLE.
     const createRes = await fetch('/api/payment/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: cartTotal }),
+      body: JSON.stringify({ items: buildOrder().items }),
     });
     const created = await readJson(createRes);
     if (!created.success) {
       setErr(created.message || 'Payment gateway unavailable. Please choose Cash on Delivery.');
+      setBusy(false);
+      return;
+    }
+    // Screen par jo total dikha, Razorpay bhi wahi maange — warna aage mat badho
+    if (created.totalAmount != null && created.totalAmount !== cartTotal) {
+      setErr(
+        `Cart ka total badal gaya hai (ab ${formatPrice(created.totalAmount)}). ` +
+        'Page refresh karke dobara try karein.'
+      );
       setBusy(false);
       return;
     }
@@ -260,7 +278,9 @@ export default function CheckoutModal() {
           if (data.success) showSuccess(data, order);
           else
             showFailure(
-              'Payment succeeded but the order could not be saved. Please contact us with this payment ID.',
+              'Payment succeeded but the order could not be saved' +
+                (data.message ? ` (${data.message})` : '') +
+                '. Please contact us on WhatsApp with this payment ID — your money is safe.',
               response.razorpay_payment_id
             );
         } catch {
@@ -287,6 +307,15 @@ export default function CheckoutModal() {
     if (v) { setErr(v); return; }
     setErr(''); setBusy(true);
     try {
+      // Pehle cart ke daam live products se milao. Kuch badla ho to customer
+      // naya total dekh le, tabhi aage badhe — bina bataye daam nahi badalte.
+      const changes = await syncCart();
+      if (changes.length) {
+        setErr(`Aapke cart mein badlav hua: ${changes.join(' · ')}. Naya total dekh kar dobara dabayein.`);
+        setBusy(false);
+        return;
+      }
+
       if (payMethod === 'cod') { await placeCOD(); setBusy(false); }
       else await placeRazorpay();
     } catch (e) {

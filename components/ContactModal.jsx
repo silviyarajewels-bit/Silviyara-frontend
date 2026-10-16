@@ -12,21 +12,31 @@ export default function ContactModal() {
   const [form, setForm] = useState(EMPTY);
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
 
   const close = () => setContactOpen(false);
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
   const submit = async (e) => {
     e.preventDefault();
-    setBusy(true);
+    setBusy(true); setErr('');
+    // Pehle jawab dekhe bina "Thank you" dikh jaata tha — DB down ho to
+    // message chupchaap kho jaata aur customer intezaar karta reh jaata.
+    let ok = false;
     try {
-      await fetch('/api/contact', {
+      const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-    } catch (err) {}
+      const data = await res.json().catch(() => ({}));
+      ok = res.ok && data.success;
+    } catch {}
     setBusy(false);
+    if (!ok) {
+      setErr(`Message abhi nahi bhej paaye. WhatsApp par likhein: ${WHATSAPP_DISPLAY}`);
+      return;   // form waisa hi rehne do — customer ka likha hua na mite
+    }
     setSent(true);
     setForm(EMPTY);
     setTimeout(() => setSent(false), 5000);
@@ -102,6 +112,11 @@ export default function ContactModal() {
             <button type="submit" className="cmodal-submit-btn" disabled={busy}>
               <span>{busy ? 'Sending...' : 'Send Message →'}</span>
             </button>
+            {err && (
+              <div className="cmodal-success-msg" style={{ display: 'block', color: '#c0392b' }}>
+                {err}
+              </div>
+            )}
             {sent && (
               <div className="cmodal-success-msg" style={{ display: 'block' }}>
                 ✦ Thank you! We&apos;ll be in touch within 24 hours.

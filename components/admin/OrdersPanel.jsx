@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { adminFetch, adminGet, fmt, fmtDateTime } from '@/lib/adminApi';
+import { adminFetch, adminGet, fmt, fmtDateTime, esc } from '@/lib/adminApi';
 import {
   IcOrders, IcSearch, IcRefresh, IcPhone, IcMail, IcTrack, IcGift,
   IcCard, IcCod, IcSuccess, IcClock, IcWhatsApp, IcInvoice, IcCopy, IcCheck,
@@ -43,16 +43,19 @@ const STATUS_FILTERS = [
 
 // Invoice ek alag window mein plain HTML ke roop mein khulta hai — wahan React
 // nahi chalta, isliye uske andar ka 🎁 emoji hi rahega (SVG kaam nahi karega).
+//
+// ⚠️ React yahan escape NAHI karta — customer ka har text esc() se guzarta hai
+// (wajah lib/adminApi.js mein). Naya field jodo to usme bhi esc() lagana.
 function buildInvoice(o) {
   const items = (o.items || []).map((i) => `
     <tr>
-      <td>${i.name}${i.sku ? ` <span style="color:#888;font-size:11px">(${i.sku})</span>` : ''}</td>
-      <td style="text-align:center">${i.qty || 1}</td>
+      <td>${esc(i.name)}${i.sku ? ` <span style="color:#888;font-size:11px">(${esc(i.sku)})</span>` : ''}</td>
+      <td style="text-align:center">${Number(i.qty) || 1}</td>
       <td style="text-align:right">₹${Number(i.price || 0).toLocaleString('en-IN')}</td>
       <td style="text-align:right">₹${Number((i.price || 0) * (i.qty || 1)).toLocaleString('en-IN')}</td>
     </tr>`).join('');
 
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Invoice ${o.orderNumber || o._id}</title>
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Invoice ${esc(o.orderNumber || o._id)}</title>
 <style>
   *{box-sizing:border-box}
   body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#1c1814;padding:40px;max-width:800px;margin:0 auto}
@@ -76,21 +79,21 @@ function buildInvoice(o) {
     </div>
     <div style="text-align:right">
       <h2 style="margin:0;font-size:18px">INVOICE</h2>
-      <p class="muted">${o.orderNumber || String(o._id).slice(-8).toUpperCase()}<br>${new Date(o.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+      <p class="muted">${esc(o.orderNumber || String(o._id).slice(-8).toUpperCase())}<br>${new Date(o.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
     </div>
   </div>
 
   <div class="grid">
     <div class="box">
       <h4>Bill To</h4>
-      <strong>${o.customerName || ''}</strong><br>
-      <span class="muted">${o.customerMobile || ''}<br>${o.customerEmail || ''}</span>
+      <strong>${esc(o.customerName)}</strong><br>
+      <span class="muted">${esc(o.customerMobile)}<br>${esc(o.customerEmail)}</span>
     </div>
     <div class="box">
       <h4>Ship To</h4>
       <span class="muted">
-        ${o.customerAddress || ''}${o.customerLandmark ? ', ' + o.customerLandmark : ''}<br>
-        ${o.customerCity || ''}${o.customerState ? ', ' + o.customerState : ''} — ${o.customerPin || ''}
+        ${esc(o.customerAddress)}${o.customerLandmark ? ', ' + esc(o.customerLandmark) : ''}<br>
+        ${esc(o.customerCity)}${o.customerState ? ', ' + esc(o.customerState) : ''} — ${esc(o.customerPin)}
       </span>
     </div>
   </div>
@@ -102,10 +105,10 @@ function buildInvoice(o) {
 
   <p class="total">Total: ₹${Number(o.totalAmount || 0).toLocaleString('en-IN')}</p>
   <p class="muted" style="text-align:right">
-    Payment: ${o.paymentMethod || 'COD'} — ${o.paymentStatus || 'Pending'}
-    ${o.paymentId ? `<br>Payment ID: ${o.paymentId}` : ''}
+    Payment: ${esc(o.paymentMethod || 'COD')} — ${esc(o.paymentStatus || 'Pending')}
+    ${o.paymentId ? `<br>Payment ID: ${esc(o.paymentId)}` : ''}
   </p>
-  ${o.giftWrap ? `<div class="box" style="margin-top:16px"><h4>🎁 Gift Wrap</h4><span class="muted">${o.giftMessage || 'No message'}</span></div>` : ''}
+  ${o.giftWrap ? `<div class="box" style="margin-top:16px"><h4>🎁 Gift Wrap</h4><span class="muted">${esc(o.giftMessage || 'No message')}</span></div>` : ''}
 
   <div class="foot">
     Thank you for shopping with Silviyara Jewels · All pieces are hallmarked 925 sterling silver<br>

@@ -231,7 +231,7 @@ export default function Chatbot() {
           </button>
         </div>
 
-        <div className="nch-footer">Powered by Gemini AI · Silviyara Jewels</div>
+        <div className="nch-footer">AI Assistant · Silviyara Jewels</div>
       </div>
     </>
   );

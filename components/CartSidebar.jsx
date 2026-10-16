@@ -8,7 +8,7 @@ import { useState } from 'react';
 
 export default function CartSidebar() {
   const { cartOpen, setCartOpen, setCheckoutOpen } = useUI();
-  const { cart, cartTotal, removeFromCart, updateQty } = useCart();
+  const { cart, cartTotal, removeFromCart, updateQty, cartNotice, clearCartNotice } = useCart();
 
   const close = () => setCartOpen(false);
 
@@ -17,9 +17,11 @@ export default function CartSidebar() {
     if (!cart.length) return;
     const lines = cart
       .map((i) => `${i.emoji || '💎'} ${i.name} × ${i.qty} — ${formatPrice(i.price * i.qty)}`)
-      .join('%0A');
-    const msg = `Hi Silviyara! I want to order:%0A%0A${lines}%0A%0A*Total: ${formatPrice(cartTotal)}*`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
+      .join('\n');
+    // Poora message encode — pehle sirf newline (%0A) haath se likhi thi, to
+    // naam mein & ya # aate hi baaki message kat jaata tha
+    const msg = `Hi Silviyara! I want to order:\n\n${lines}\n\n*Total: ${formatPrice(cartTotal)}*`;
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   return (
@@ -33,6 +35,25 @@ export default function CartSidebar() {
         </div>
 
         <div className="cart-body">
+          {/* Live daam se milane par kuch badla ho to customer ko saaf batao */}
+          {cartNotice.length > 0 && (
+            <div style={{
+              fontSize: '.78rem', lineHeight: 1.55, padding: '.7rem .9rem', marginBottom: '.75rem',
+              background: 'rgba(201,168,76,.1)', border: '1px solid rgba(201,168,76,.35)', borderRadius: 6,
+              position: 'relative',
+            }}>
+              <strong style={{ display: 'block', marginBottom: '.25rem' }}>Cart update hua</strong>
+              {cartNotice.map((c) => <div key={c}>• {c}</div>)}
+              <button
+                onClick={clearCartNotice}
+                aria-label="Dismiss"
+                style={{ position: 'absolute', top: 6, right: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text2)' }}
+              >
+                <IcClose />
+              </button>
+            </div>
+          )}
+
           {cart.length === 0 ? (
             <div className="cart-empty">
               <p>Your cart is empty</p>

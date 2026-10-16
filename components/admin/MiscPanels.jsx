@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { adminFetch, adminGet, fmtDate, fmtDateTime, CATEGORIES } from '@/lib/adminApi';
+import { adminFetch, adminGet, fmtDate, fmtDateTime, CATEGORIES, esc } from '@/lib/adminApi';
+
+// Customer ki file sirf base64 data URL ho sakti hai — kuch aur (javascript:,
+// ya quote todne wala text) aaye to kholenge hi nahi
+const DATA_URL = /^data:[a-z0-9.+-]+\/[a-z0-9.+-]+;base64,[a-z0-9+/=\s]*$/i;
 import { IcRefresh, IcDesign, IcAttach, IcSuccess, IcError } from '@/lib/icons';
 
 // ─── Contact Messages ───────────────────────────────────────────────────────
@@ -72,19 +76,24 @@ export function CustomDesignsPanel({ active }) {
     try {
       const res = await adminFetch(`/api/custom-design/${id}/file`);
       const data = await res.json();
-      if (data.success && data.fileData) {
+      if (data.success && data.fileData && !DATA_URL.test(data.fileData)) {
+        window.alert('Ye file sahi format mein nahi hai — security ke liye nahi khol rahe.');
+      } else if (data.success && data.fileData) {
+        // ⚠️ Naam aur file dono customer ki di hui hain — esc() zaroori (lib/adminApi.js)
+        const name = esc(data.fileName || 'design-file');
+        const src = esc(data.fileData);
         const w = window.open('', '_blank');
         if (w) {
           if (String(data.fileType || '').startsWith('image/')) {
             w.document.write(
-              `<title>${data.fileName}</title><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh">
-               <img src="${data.fileData}" style="max-width:100%;max-height:100vh"/></body>`
+              `<title>${name}</title><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh">
+               <img src="${src}" style="max-width:100%;max-height:100vh"/></body>`
             );
           } else {
             w.document.write(
-              `<title>${data.fileName}</title><body style="font-family:system-ui;padding:40px;text-align:center">
-               <p>${data.fileName}</p>
-               <a href="${data.fileData}" download="${data.fileName}"
+              `<title>${name}</title><body style="font-family:system-ui;padding:40px;text-align:center">
+               <p>${name}</p>
+               <a href="${src}" download="${name}"
                   style="display:inline-block;padding:12px 24px;background:#c9a84c;color:#111;text-decoration:none;border-radius:4px">
                   Download file</a></body>`
             );

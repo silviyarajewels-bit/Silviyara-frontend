@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { reconcileCart } from '@/lib/pricing';
 
 const CartContext = createContext(null);
 
@@ -32,6 +33,41 @@ export function CartProvider({ children }) {
       localStorage.setItem(CART_KEY, JSON.stringify(cart));
     } catch (e) {}
   }, [cart, loaded]);
+
+  /**
+   * Cart ke daam live products se milao (wajah lib/pricing.js mein).
+   *
+   * Site khulte hi ek baar chalta hai, aur checkout har order se pehle dobara
+   * chalata hai. Lautata hai badlavon ki list — khaali = sab theek.
+   * API down ho / demo data aaye to cart ko haath nahi lagate.
+   */
+  const cartRef = useRef(cart);
+  cartRef.current = cart;
+  const [cartNotice, setCartNotice] = useState([]);
+
+  const syncCart = useCallback(async () => {
+    if (!cartRef.current.length) return [];
+    let live;
+    try {
+      const res = await fetch('/api/products');
+      if (!res.ok) return [];
+      live = await res.json();
+    } catch {
+      return [];
+    }
+    if (!Array.isArray(live) || !live.length) return [];
+
+    const { next, changes } = reconcileCart(cartRef.current, live);
+    if (changes.length) {
+      setCart(next);
+      setCartNotice(changes);
+    }
+    return changes;
+  }, []);
+
+  useEffect(() => {
+    if (loaded) syncCart();
+  }, [loaded, syncCart]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -128,6 +164,9 @@ export function CartProvider({ children }) {
         inWishlist,
         cartCount,
         cartTotal,
+        syncCart,
+        cartNotice,
+        clearCartNotice: () => setCartNotice([]),
         toast,
       }}
     >
