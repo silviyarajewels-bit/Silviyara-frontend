@@ -1,0 +1,83 @@
+[
+  {
+    "title": "About Our Silver",
+    "items": [
+      {
+        "q": "Is it real 925 sterling silver?",
+        "a": "Yes, all our jewellery is crafted from genuine 925 sterling silver — hallmarked and certified. 925 means 92.5% pure silver alloyed with 7.5% other metals for durability."
+      },
+      {
+        "q": "Is the silver hypoallergenic?",
+        "a": "Yes! 925 sterling silver is nickel-free and hypoallergenic, making it safe for sensitive skin."
+      },
+      {
+        "q": "Will it tarnish?",
+        "a": "All silver tarnishes over time naturally — this doesn't mean it's fake. Clean with a soft cloth and store in the included anti-tarnish pouch to maintain shine."
+      }
+    ]
+  },
+  {
+    "title": "Orders & Payment",
+    "items": [
+      {
+        "q": "What payment methods do you accept?",
+        "a": "We accept all UPI, credit/debit cards, net banking, and wallets via Razorpay. We also offer Cash on Delivery (COD)."
+      },
+      {
+        "q": "How do I place an order?",
+        "a": "Browse our collection, add items to cart, and proceed to checkout. You can also order directly on WhatsApp at +91 8004703038."
+      },
+      {
+        "q": "Can I modify my order after placing it?",
+        "a": "Contact us within 2 hours of placing the order on WhatsApp and we'll do our best to help."
+      }
+    ]
+  },
+  {
+    "title": "Shipping & Delivery",
+    "items": [
+      {
+        "q": "How long does delivery take?",
+        "a": "We deliver within 3–5 business days across India. Lucknow orders may arrive faster."
+      },
+      {
+        "q": "Is shipping free?",
+        "a": "Yes! Free shipping on orders above ₹999. For orders below ₹999, a nominal shipping charge applies."
+      },
+      {
+        "q": "Can I track my order?",
+        "a": "Yes! Visit our Track Order page and enter your order ID to track your shipment in real time."
+      }
+    ]
+  },
+  {
+    "title": "Returns & Warranty",
+    "items": [
+      {
+        "q": "What is your return policy?",
+        "a": "We offer a 7-day easy return policy, no questions asked. Items must be unworn and in original packaging."
+      },
+      {
+        "q": "What if I receive a damaged item?",
+        "a": "Please contact us immediately on WhatsApp with photos. We'll send a replacement within 3 working days."
+      },
+      {
+        "q": "Do you offer any warranty?",
+        "a": "All silver jewellery comes with our quality guarantee. For any manufacturing defects, contact us within 30 days."
+      }
+    ]
+  },
+  {
+    "title": "Custom Design",
+    "items": [
+      {
+        "q": "Can I get a custom piece made?",
+        "a": "Absolutely! Visit our Custom Design page to submit your design idea. We'll review and quote within 48 hours."
+      },
+      {
+        "q": "How long does a custom order take?",
+        "a": "Custom pieces typically take 7–14 business days depending on complexity."
+      }
+    ]
+  }
+]
